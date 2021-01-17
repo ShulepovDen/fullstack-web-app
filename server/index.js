@@ -6,44 +6,58 @@ const path = require('path');
 const app = express();
 
 function getAllProducts(fileJSON) {
-  return JSON.parse(
-    fs.readFileSync(fileJSON, 'utf8', (err, data) => {
-      if (err) {
-        console.error(err);
-      }
-    })
-  );
-}
-
-function getProductById(fileJSON, id) {
-  const productsList = JSON.parse(
-    fs.readFileSync(fileJSON, 'utf8', (err, data) => {
-      if (err) {
-        console.error(err);
-      }
-    })
-  );
-  for (let i = 0; i < productsList.length; i += 1) {
-    if (productsList[i].id === id) {
-      return productsList[i];
-    }
+  try {
+    return JSON.parse(
+      fs.readFileSync(fileJSON, 'utf8', (err, data) => {
+        if (err) {
+          console.error(err);
+        }
+      })
+    );
+  } catch (error) {
+    console.error(error);
+    return false;
   }
 }
 
-function addNewProduct(fileJSON, newProductId, newProductName, newProductPrice, newProductAmount) {
-  const productsList = JSON.parse(
-    fs.readFileSync(fileJSON, 'utf8', (err, data) => {
-      if (err) {
-        console.error(err);
-      }
-    })
-  );
+function getProductById(fileJSON, id) {
+  let productsList;
+  try {
+    productsList = JSON.parse(
+      fs.readFileSync(fileJSON, 'utf8', (err, data) => {
+        if (err) {
+          console.error(err);
+        }
+      })
+    );
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+
+  return productsList.find((item) => item.id === id);
+}
+
+function addNewProduct(fileJSON, product) {
+  let productsList;
+  try {
+    productsList = JSON.parse(
+      fs.readFileSync(fileJSON, 'utf8', (err, data) => {
+        if (err) {
+          console.error(err);
+        }
+      })
+    );
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
 
   productsList.push({
-    id: newProductId,
-    product_name: newProductName,
-    product_price: newProductPrice,
-    product_amount: newProductAmount,
+    id: product.newProductId,
+    product_name: product.newProductName,
+    product_price: product.newProductPrice,
+    product_amount: product.newProductAmount,
   });
   fs.writeFileSync(fileJSON, JSON.stringify(productsList), (err) => {
     if (err) {
@@ -51,19 +65,25 @@ function addNewProduct(fileJSON, newProductId, newProductName, newProductPrice, 
     }
   });
 }
-function updateProductById(fileJSON, productid, newProductName, newProductPrice, newProductAmount) {
-  const productsList = JSON.parse(
-    fs.readFileSync(fileJSON, 'utf8', (err, data) => {
-      if (err) {
-        console.error(err);
-      }
-    })
-  );
-  productsList[productsList.findIndex((element) => element.id === productid)] = {
-    id: productid,
-    product_name: newProductName,
-    product_price: newProductPrice,
-    product_amount: newProductAmount,
+function updateProductById(fileJSON, productId, product) {
+  let productsList;
+  try {
+    productsList = JSON.parse(
+      fs.readFileSync(fileJSON, 'utf8', (err, data) => {
+        if (err) {
+          console.error(err);
+        }
+      })
+    );
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+  productsList[productsList.findIndex((element) => element.id === productId)] = {
+    id: productId,
+    product_name: product.newProductName,
+    product_price: product.newProductPrice,
+    product_amount: product.newProductAmount,
   };
 
   fs.writeFileSync(fileJSON, JSON.stringify(productsList), (err) => {
@@ -92,4 +112,10 @@ function deleteProductById(fileJSON, productid) {
   });
 }
 const JSONfileName = path.resolve(__dirname, 'products.json');
+const newProduct = {
+  id: 7,
+  product_name: 'Кукуруза',
+  product_price: 222,
+  product_amount: 222,
+};
 console.log(deleteProductById(JSONfileName, 5));

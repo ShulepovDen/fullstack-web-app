@@ -92,7 +92,7 @@ function updateProductById(fileJSON, productId, product) {
     }
   });
 }
-function deleteProductById(fileJSON, productid) {
+function deleteProductById(fileJSON, productId) {
   const productsList = JSON.parse(
     fs.readFileSync(fileJSON, 'utf8', (err, data) => {
       if (err) {
@@ -101,7 +101,7 @@ function deleteProductById(fileJSON, productid) {
     })
   );
   productsList.splice(
-    productsList.findIndex((element) => element.id === productid),
+    productsList.findIndex((element) => element.id === productId),
     1
   );
 

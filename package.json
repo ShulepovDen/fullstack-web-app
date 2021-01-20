@@ -21,7 +21,7 @@
     "start": "webpack serve",
     "dev": "npm run start && npm run watch",
     "test": "jest",
-    "server": "node server/index.js"
+    "server": "nodemon server/index.js localhost 8080"
   },
   "author": "ShyleR",
   "license": "ISC",

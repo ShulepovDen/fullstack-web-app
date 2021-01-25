@@ -1,46 +1,82 @@
 /* eslint-disable comma-dangle */
+const productsMethods = require('./products-methods');
 const express = require('express');
-const fs = require('fs');
+const fetch = require('node-fetch');
 const path = require('path');
 
+const fileNameJSON = path.resolve(__dirname, 'products.json');
+function checkId(id) {
+  return !isNaN(parseInt(id));
+}
 const app = express();
-let newProduct = {
+const newProduct = {
   id: 7,
   product_name: 'Кукуруза',
   product_price: 222,
   product_amount: 222,
 };
 app.use(express.json());
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+  next();
+});
+
 app.get('/products', (req, res) => {
-  res.json(getAllProducts(JSONfileName));
+  res.json(productsMethods.getAllProducts(fileNameJSON));
 });
 
 app.get('/product/:id', (req, res) => {
   const id = Number(req.params.id);
-  res.json(getProductById(JSONfileName, id));
+  if (!checkId(id)) {
+    res.status(482).send({
+      error: 'Incorrect id',
+    });
+    return;
+  }
+  const result = res.json(productsMethods.getProductById(fileNameJSON, id));
+  if (result === undefined) {
+    res.status(483).send({
+      error: 'Product not found',
+    });
+  }
+  res.send();
 });
 app.post('/product', (req, res) => {
-  if (addNewProduct(JSONfileName, newProduct)) {
-    res.json({ result: 'ok' });
+  if (productsMethods.addNewProduct(fileNameJSON, req.body)) {
+    res.status(200).json({ result: 'ok' });
   } else {
-    res.json({ error: 'failed to create product' });
+    res.status(454).json({ error: 'failed to create product' });
   }
 });
 app.put('/product/:id', (req, res) => {
   const id = Number(req.params.id);
-  if (updateProductById(JSONfileName, id, req.body)) {
-    res.json({ result: 'ok' });
+  if (!checkId(id)) {
+    res.status(444).send({
+      error: 'Incorrect id',
+    });
+    return;
+  }
+  if (productsMethods.updateProductById(fileNameJSON, id, req.body)) {
+    res.status(200).json({ result: 'ok' });
   } else {
-    res.json({ error: 'failed to update product' });
+    res.status(454).json({ error: 'failed to update product' });
   }
 });
 
 app.delete('/product/:id', (req, res) => {
   const id = Number(req.params.id);
-  if (deleteProductById(JSONfileName, id)) {
-    res.json({ result: 'ok' });
+  if (!checkId(id)) {
+    res.status(444).send({
+      error: 'Incorrect id',
+    });
+    return;
+  }
+  if (productsMethods.deleteProductById(fileNameJSON, id)) {
+    res.status(200).json({ result: 'ok' });
   } else {
-    res.json({ error: 'failed to delete product' });
+    res.status(454).json({ error: 'failed to delete product' });
   }
 });
 
@@ -48,111 +84,9 @@ app.listen(80, (err) => {
   if (err) return console.log('something bad', err);
   console.log('server is listening 80');
 });
-
-function getAllProducts(fileJSON) {
-  try {
-    return JSON.parse(
-      fs.readFileSync(fileJSON, 'utf8', (err, data) => {
-        if (err) {
-          console.error(err);
-        }
-      })
-    );
-  } catch (error) {
-    console.error(error);
-    return false;
-  }
-}
-
-function getProductById(fileJSON, id) {
-  let productsList;
-  try {
-    productsList = JSON.parse(
-      fs.readFileSync(fileJSON, 'utf8', (err, data) => {
-        if (err) {
-          console.error(err);
-        }
-      })
-    );
-  } catch (error) {
-    console.error(error);
-    return false;
-  }
-
-  return productsList.find((item) => item.id === id);
-}
-
-function addNewProduct(fileJSON, product) {
-  let productsList;
-  try {
-    productsList = JSON.parse(
-      fs.readFileSync(fileJSON, 'utf8', (err, data) => {
-        if (err) {
-          console.error(err);
-        }
-      })
-    );
-  } catch (error) {
-    console.error(error);
-    return false;
-  }
-
-  productsList.push(product);
-  fs.writeFileSync(fileJSON, JSON.stringify(productsList), (err) => {
-    if (err) {
-      console.error(err);
-    }
-  });
-  return true;
-}
-function updateProductById(fileJSON, productId, product) {
-  let productsList;
-  try {
-    productsList = JSON.parse(
-      fs.readFileSync(fileJSON, 'utf8', (err, data) => {
-        if (err) {
-          console.error(err);
-        }
-      })
-    );
-  } catch (error) {
-    console.error(error);
-    return false;
-  }
-  if (productsList.findIndex((element) => element.id === productId) === -1) {
-    return false;
-  }
-  productsList[productsList.findIndex((element) => element.id === productId)] = product;
-
-  fs.writeFileSync(fileJSON, JSON.stringify(productsList), (err) => {
-    if (err) {
-      console.error(err);
-    }
-  });
-  return true;
-}
-function deleteProductById(fileJSON, productId) {
-  const productsList = JSON.parse(
-    fs.readFileSync(fileJSON, 'utf8', (err, data) => {
-      if (err) {
-        console.error(err);
-      }
-    })
-  );
-  if (productsList.findIndex((element) => element.id === productId) === -1) {
-    return false;
-  }
-  productsList.splice(
-    productsList.findIndex((element) => element.id === productId),
-    1
-  );
-  fs.writeFileSync(fileJSON, JSON.stringify(productsList), (err) => {
-    if (err) {
-      console.error(err);
-    }
-  });
-  return true;
-}
-const JSONfileName = path.resolve(__dirname, 'products.json');
-
-//console.log(addNewProduct(JSONfileName, newProduct));
+// fetch('http://localhost/product/20')
+//   .then((response) => response.json())
+//   .then((data) => {
+//     console.log(data);
+//   });
+//console.log(addNewProduct(fileNameJSON, newProduct));
